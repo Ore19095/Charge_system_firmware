@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "xc.h": "c",
+        "io.h": "c",
+        "builtins.h": "c",
+        "language_support.h": "c",
+        "pic.h": "c",
+        "stdint.h": "c",
+        "htc.h": "c",
+        "pic_chip_select.h": "c",
+        "trace16.h": "c"
+    }
+}
