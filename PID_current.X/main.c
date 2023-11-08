@@ -21,6 +21,10 @@
 // --------------- DEFINICIONES --------------------------
 #define UART_BUFFER 64
 
+#define PID_D -1.244e-4
+#define PID_I -3500.5
+#define PID_P -1.2515
+#define PID_Fs 1000 // frecuencia de muestreo del PID
 // --------------- VARIABLES -----------------------------
 /*Para el envio de datos por medio de uart*/
 uint8_t writePointer = 0;
@@ -34,19 +38,10 @@ uint16_t current = -1; // => ADC3
 uint16_t vBuck = -1; // => ADC0
 uint8_t nextValue = 0; //siguiente canal del ADC a leer
 /*variables pid*/
-int16_t u[3] = {0,0,0}; // u[k] => u(n-k) n = muestra actual
-int16_t e[3] = {0,0,0}; // x[k] => e(n-k) n = muestra actual
-int16_t ref = 512; // valor de referencia
-int16_t voltage_b[3] = {-3.074,
-                        - 2.65,
-                        - 0.5711}; // coeficientes del numerador, pid voltaje
-int16_t voltage_a[3] = {0,0,-1}; // coeficientes del denominador, pid voltaje
-int16_t current_b[3] = {0,0,0}; // coeficientes del numerador, pid corriente
-int16_t current_a[3] = {0,0,0}; // coeficientes del denominador, pid corriente
-
-int16_t *a_coefficients; // puntero a los coeficientes del denominador
-int16_t *b_coefficients; // puntero a los coeficientes del numerador
-
+float e_anterior = 0;
+float e = 0;
+float e_integral = 0;
+float ref = 512;
 /*Controlador de carga  */
 /* Bit 0: READ_CHAN0
    
@@ -70,8 +65,7 @@ void conf_ports();
 void pid(void);
 
 int main(void) {
-    a_coefficients = voltage_a;
-    b_coefficients = voltage_b;
+
     //------ CONFIGURACION DE PUERTOS ---------------------
     conf_ports();
     //------ CONFIGURACION DE TIMERS ---------------------  
@@ -84,19 +78,21 @@ int main(void) {
     conf_uart();
     //----------------- INTERRUPCIONES ----------------------
     sei(); // Habilitar interrupciones globales
-    
 
+    char adc_data[12];
     // encender buck
     PORTD &= ~(1 << PD5);
+    // activar switch de carga LiON
+    PORTD |= (1 << PD7);
 
-    char adc_data[6];
+    
     while(1){
         //_delay_ms(10);
         //send_data("hola\n",7);
         /*Enviar el valor del ADC por uart*/
-        _delay_ms(100);
-        sprintf(adc_data,"%d\n",OCR1A);
-        send_data(adc_data,5);
+        _delay_ms(1);
+        sprintf(adc_data,"%d,%d\n",OCR1A,adcValue);
+        send_data(adc_data,11);
     }
     return 0;
 }
@@ -104,12 +100,12 @@ int main(void) {
 // --------------- FUNCIONES -----------------------------
 void send_data(const char* data, uint8_t num){
     for (int i=0; i<num && data[i]!=0; i++ ) {
-        /*while( !( UCSR0A&(1<<UDRE0))  );
-        UDR0 = data[i];*/
-        uartBuffer[writePointer] = data[i];
-        writePointer=(writePointer+1)%UART_BUFFER;
+        while( !( UCSR0A&(1<<UDRE0))  );
+        UDR0 = data[i];
+        //uartBuffer[writePointer] = data[i];
+        //writePointer=(writePointer+1)%UART_BUFFER;
     }
-    UCSR0B |= 1<<UDRIE0; // HAbilitar interrupcion
+    //UCSR0B |= 1<<UDRIE0; // HAbilitar interrupcion
     return;
 }
 
@@ -144,7 +140,7 @@ void conf_timer1(){
     // Configuración de los pines OC1A como salida, COM1A[1:0] = 0b10
     TCCR1A |= (1 << COM1A1);
     TCCR1A &= ~(1 << COM1A0);
-    OCR1A = 0; // duty cycle = 0%
+    OCR1A = 512; // duty cycle = 0%
     return;
 }
 
@@ -187,7 +183,7 @@ void conf_uart(){
     UCSR0B |= 1<<RXEN0; // Habilitar receptor UART
     UCSR0B |= 1<<TXEN0; // Habilitar transmisor UART
    
-    UBRR0 = 0; //1M baud rate con Fosc = 8MHz
+    UBRR0 = 103; //1M baud rate con Fosc = 8MHz
 }
 
 void conf_ports(){
@@ -211,24 +207,17 @@ void conf_ports(){
 }
 
 void calculate_pid(){
-    // Se calcula el valor de la señal de control
-    e[2] = e[1]; // x[k+1] = x[k]
-    e[1] = e[0]; // x[k] = x[k-1]
+    e = ref  - adcValue;
 
-    u[2] = u[1]; // u[k+1] = u[k
-    u[1] = u[0]; // u[k] = u[k-1]
-    // Se lee el valor del ADC
-    e[0] = ref - adcValue;
-    // Se calcula el valor de la señal de control
-    for(int i = 0 ; i < 3 ; i++){
-        u[0] += b_coefficients[i]*e[i];
-        u[0] -= a_coefficients[i]*u[i];
-    }
+    e_integral += e/PID_Fs;
+    
+    float u = PID_P*e + PID_I*e_integral + PID_D*(e - e_anterior)*PID_Fs;
 
-    if(u[0] > 512) u[0] = 512;
-    else if(u[0] < -512) u[0] = -512;
+    if(u > 1023) u = 1023;
+    else if(u < 0) u = 0;
 
-    OCR1A = 512 + u[0]; // duty cycle = u[0]/1023
+    OCR1A =(uint16_t) u;
+    return;
 }
 
 //---------------- INTERRUPCIONES ------------------------
