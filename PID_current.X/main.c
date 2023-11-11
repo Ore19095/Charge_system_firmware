@@ -21,10 +21,16 @@
 // --------------- DEFINICIONES --------------------------
 #define UART_BUFFER 64
 
-#define PID_D -1.244e-4
-#define PID_I -3500.5
+#define PID_D -2.244e-4
+#define PID_I -500.5
 #define PID_P -1.2515
 #define PID_Fs 1000 // frecuencia de muestreo del PID
+
+//PID for current control
+#define PID_D_CUR -3.244e-4/5
+#define PID_I_CUR -500.5/10
+#define PID_P_CUR -1.2515/10
+#define PID_Fs_CUR 1000 // frecuencia de muestreo del PID
 // --------------- VARIABLES -----------------------------
 /*Para el envio de datos por medio de uart*/
 uint8_t writePointer = 0;
@@ -41,7 +47,7 @@ uint8_t nextValue = 0; //siguiente canal del ADC a leer
 float e_anterior = 0;
 float e = 0;
 float e_integral = 0;
-float ref = 512;
+float ref = 800;
 /*Controlador de carga  */
 /* Bit 0: READ_CHAN0
    
@@ -79,7 +85,7 @@ int main(void) {
     //----------------- INTERRUPCIONES ----------------------
     sei(); // Habilitar interrupciones globales
 
-    char adc_data[12];
+    char adc_data[13];
     // encender buck
     PORTD &= ~(1 << PD5);
     // activar switch de carga LiON
@@ -90,9 +96,9 @@ int main(void) {
         //_delay_ms(10);
         //send_data("hola\n",7);
         /*Enviar el valor del ADC por uart*/
-        _delay_ms(1);
-        sprintf(adc_data,"%d,%d\n",OCR1A,adcValue);
-        send_data(adc_data,11);
+        _delay_ms(10);
+        sprintf(adc_data,"%d,%d\n\r",OCR1A,adcValue);
+        send_data(adc_data,12);
     }
     return 0;
 }
@@ -164,7 +170,7 @@ void conf_adc(){
     // Referencia de voltaje en AVCC con capacitor en AREF
     ADMUX |= (1 << REFS0);
     ADMUX &= ~(1 << REFS1);
-    ADMUX &= ~((1 << MUX1) | (1 << MUX0));
+    ADMUX |= ((1 << MUX1) | (1 << MUX0));
     // activar la interrupcion por ADC
     ADCSRA |= (1 << ADIE);
     // prescalador de 32 para el reloj del modulo
@@ -211,7 +217,7 @@ void calculate_pid(){
 
     e_integral += e/PID_Fs;
     
-    float u = PID_P*e + PID_I*e_integral + PID_D*(e - e_anterior)*PID_Fs;
+    float u = PID_P_CUR*e + PID_I_CUR*e_integral + PID_D_CUR*(e - e_anterior)*PID_Fs;
 
     if(u > 1023) u = 1023;
     else if(u < 0) u = 0;
