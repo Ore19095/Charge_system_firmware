@@ -1,10 +1,9 @@
 /*
- * File:   main.c
+ * File:   mian.c
  * Author: AngelOrellana
  *
- * Created on September 20, 2023, 7:03 PM
+ * Created on November 18, 2023, 9:02 AM
  */
-
 // ---------------   FUSES    ---------------------------
 
 
@@ -88,19 +87,37 @@ int main(void) {
     sei(); // Habilitar interrupciones globales
 
     char adc_data[13];
-    // encender buck
-    PORTD &= ~(1 << PD5);
+    // apagar 
+    PORTD |= (1 << PD5);
     // activar switch de carga LiON
-    PORTD |= (1 << PD7);
-
+    PORTD &= ~(1 << PD7);
+    // encender switch power NiMH
+    PORTB |= (1 << PB2);
     
     while(1){
-        //_delay_ms(10);
-        //send_data("hola\n",7);
-        /*Enviar el valor del ADC por uart*/
-        _delay_ms(10);
-        sprintf(adc_data,"%d,%d\n\r",OCR1A,adcValue);
-        send_data(adc_data,12);
+        _delay_ms(1000);
+        //encender led de carga
+        PORTB |= (1 << PB6);
+        _delay_ms(1000);
+        //apagar led de carga
+        PORTB &= ~(1 << PB6);
+        PORTB |= (1 << PB2);
+        // apagar LiON
+        PORTD &= ~(1 << PD4);
+        _delay_ms(1000);
+        //encender led de carga
+        PORTB |= (1 << PB7);
+        //encender niMH
+
+        _delay_ms(1000);
+        //apagar led de carga
+        PORTB &= ~(1 << PB7);
+        // esperar 10 segundos con las baterias del
+        
+        // apagar niMH
+        PORTB &= ~(1 << PB2);
+        // encender LiON
+        PORTD |= (1 << PD4);
     }
     return 0;
 }
@@ -257,7 +274,7 @@ ISR(ADC_vect){
     adcValue = ADC;
 
 
-    calculate_pid();
+    //calculate_pid();
 
     return;
 }
