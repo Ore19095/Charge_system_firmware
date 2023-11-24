@@ -116,7 +116,7 @@ int main(void) {
         if(vAlimentacion > V_IN_MIN){
 
         charge_lion_prev = charge_lion;
-        if(vLion < V_LECT_MAX_LION){
+        if(vLion < V_LECT_MAX_LION && charge_lion== 0){
             PORTD &= ~(1 << PD5);
             PORTD |= (1 << PD7);
             PORTB |= (1 << PB7);
@@ -130,7 +130,19 @@ int main(void) {
         }else if(buck_current < I_LION_MIN){
             charge_lion = 2;
         }
-        
+
+        //es neceario poner a cargar la bateria
+        if(vLion < V_LECT_MIN_LION && charge_lion == 2){
+            PORTD |= (1 << PD5);
+            PORTD &= ~(1 << PD7);
+            PORTB &= ~(1 << PB7);
+            charge_lion = 0;
+            e_anterior = 0;
+            e_integral = 0;
+            ref = 0;
+            ref_top = I_LION_MAX;
+        }
+
     }
     }
     return 0;
