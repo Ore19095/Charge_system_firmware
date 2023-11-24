@@ -156,7 +156,22 @@ void charge_LiON(){
     return;
 }
 
+float e_anterior = 0;
+float e = 0;
+float e_integral = 0;
+void calculate_pid(){
+    e = ref  - buck_current;
 
+    e_integral += e/PID_Fs;
+    
+    float u = PID_P_CUR*e + PID_I_CUR*e_integral + PID_D_CUR*(e - e_anterior)*PID_Fs;
+
+    if(u > 1023) u = 1023;
+    else if(u < 0) u = 0;
+
+    OCR1A =(uint16_t) u;    
+    return;
+}
 //---------------- INTERRUPCIONES ------------------------
 
 
@@ -175,9 +190,7 @@ ISR(TIMER2_COMPA_vect){
 }
 
 ISR(ADC_vect){
-    // Se lee el valor de forma alternada de los canales ADC0, ADC1, ADC2
-    // y ADC3, el valor de ADC7.
-    
+    // Se calcula el valor de la señal de control
     switch (ADMUX & 0x0F){
     case 0:
         buck_voltage = ADC;
@@ -211,16 +224,7 @@ ISR(ADC_vect){
         break;
     }
 
-    cont_frec++;
-    // si se ha cumplido 1ms
-    if(cont_frec == 5){
-        cont_frec = 0;
-        if(flag&(1<<CHARGING_FLAG_0)) OCR1A = (uint16_t) pid_current(buck_current,ref);
-        //else if(flag&(1<<CHARGING_FLAG_1)) OCR1A =(uint16_t) pid_voltage(buck_voltage,ref);
-        else OCR1A = 1023; // duty cycle = 100%
-    }    
-    
+    calculate_pid();
+
     return;
 }
-
-
