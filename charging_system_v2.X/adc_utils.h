@@ -22,21 +22,20 @@
 #include <stdint.h>
 #include <avr/interrupt.h> // interrupciones para el timer
 
+
 // -------- PARAMETROS MODIFICABLES POR USUARIO --------------------
 #define F_OSC 8000000UL // frecuencia de oscilacion del microcontrolador
 #define F_SAMPLE 1000 // frecuencia de muestreo del adc (para cada canal)
 #define N_CHANNELS 5 // numero de canales a muestrear
 #define N_CHANNELS_ADC 8 // numero de canales a muestrear
-uint8_t usableChannels[N_CHANNELS] = {0, 1, 2, 3, 7}; // canales a muestrear
 // valores posibles de prescaladores para timer2
 #define N_PRESCALERS 7
-uint16_t const prescalers[N_PRESCALERS] = {1, 8, 32, 64, 128, 256, 1024};
-uint16_t adcValues[N_CHANNELS_ADC];
 
 
 void configureTimer2(void);
 void configureADC(void);
 void setAdicionalProcessing(void (*funcion)(void)) ;
+uint16_t readADC(uint8_t channel);
 
 
 #endif	/* XC_HEADER_TEMPLATE_H */

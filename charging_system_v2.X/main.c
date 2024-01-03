@@ -9,18 +9,40 @@
 #include <xc.h>
 #define F_CPU 8000000UL 
 #include <util/delay.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "controller_io_utils.h"
 #include "adc_utils.h"
 
-void main(void) {
-
-    configureTimer2();
+void conf_uart(void);
+void send_data(const char* data, uint8_t num);
+void main(void){
     configureADC();
+    configureTimer2();
     conf_uart();
+    sei();
+
+    char buf[10];
+
     while (1){
-        _delay_ms(1000);
-        send_data("Hola mundo\n", 11);
+        sprintf(buf,"%d",readADC(0));
+        send_data(buf,10);
+        send_data(",",1);
+        sprintf(buf,"%d",readADC(1));
+        send_data(buf,10);
+        send_data(",",1);
+        sprintf(buf,"%d",readADC(2));
+        send_data(buf,10);
+        send_data(",",1);
+        sprintf(buf,"%d",readADC(3));       
+        send_data(buf,10);
+        send_data(",",1);
+        sprintf(buf,"%d",readADC(7));  
+        send_data(buf,10);
+        send_data("\n",1);
+        _delay_ms(100);
+        
     }
     
 
@@ -38,7 +60,7 @@ void send_data(const char* data, uint8_t num){
     return;
 }
 
-void conf_uart(){
+void conf_uart(void){
      UCSR0A |= 1<<U2X0; //UART en modo de alta velocidad
     
     UCSR0B |= 1<<RXEN0; // Habilitar receptor UART

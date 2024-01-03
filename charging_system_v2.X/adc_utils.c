@@ -1,5 +1,10 @@
 #include "adc_utils.h"
 
+uint8_t usableChannels[N_CHANNELS] = {1, 0, 2, 3, 7}; // canales a muestrear
+uint16_t const prescalers[N_PRESCALERS] = {1, 8, 32, 64, 128, 256, 1024};
+uint16_t adcValues[N_CHANNELS_ADC];
+uint8_t counter = 0;
+
 void emptyFunction(void);
 
 void (*additionalProcessing)(void) = emptyFunction;
@@ -14,25 +19,32 @@ void configureTimer2(){
     TCCR2A &= ~(1 << COM2A0);
     TCCR2A &= ~(1 << COM2B1);
     TCCR2A &= ~(1 << COM2B0);
-    // temporizador en modo CTC
+    // Temporizador en modo CTC WGM2[2:0] = 0b010
     TCCR2A |= (1 << WGM21);
     TCCR2A &= ~(1 << WGM20);
     TCCR2B &= ~(1 << WGM22);
     // se configura el prescaler (beta, harcode si no funciona mañana)
-    for(int i = 0; i < N_PRESCALERS; i++){
-        ocraValue = F_OSC/(prescalers[i]*F_SAMPLE*N_CHANNELS) - 1;
-        // si el valor calculado es mayor a 255, se prueba con el siguiente prescaler
-        if(ocraValue>255) continue;
-        else break; // si el valor es menor o igual a 255, se sale del ciclo
-    }
+    // for(int i = 0; i < N_PRESCALERS; i++){
+    //     ocraValue = F_OSC/(prescalers[i]*F_SAMPLE*N_CHANNELS) - 1;
+    //     // si el valor calculado es mayor a 255, se prueba con el siguiente prescaler
+    //     if(ocraValue>255) continue;
+    //     else break; // si el valor es menor o igual a 255, se sale del ciclo
+    // }
+    // Prescalador de 64 CS2[2:0] = 0b011
+    TCCR2B |= (1 << CS21) | (1 << CS20);
+    TCCR2B &= ~(1 << CS22);
     // se actualiza el registro OCR2A con el valor calculado
-    OCR2A = (uint8_t) ocraValue;
+    OCR2A = (uint8_t) 123;
     // Se habilita la interrupcion por comparacion con OCR2A
     TIMSK2 |= (1 << OCIE2A);
+    // se enciende el ADC
     return;
 }
 
 void configureADC(){
+
+    // Deshabilita la funcion digital de los pines ADC0-ADC3
+    DIDR0 = 0b10001111;
     // Referencia de voltaje en AVCC con capacitor en AREF
     ADMUX |= (1 << REFS0);
     ADMUX &= ~(1 << REFS1);
@@ -43,6 +55,7 @@ void configureADC(){
     ADCSRA |= (1 << ADEN);
     //habilidar interrupcion por ADC
     ADCSRA |= (1 << ADIE);
+    ADCSRA |= (1 << ADSC);
     return;
 }
 
@@ -59,16 +72,41 @@ uint16_t readADC(uint8_t channel){
 
 /* Interrupcion del ADC*/
 ISR(ADC_vect){
-    // variable local que no pierde su valor entre llamadas
-    static uint8_t counter = 0;
     // se guarda el valor d-el ADC en el buffer
-    adcValues[ADMUX & 0x07] = ADC;
-    // bits que van en 1 en el registro ADMUX
-    ADMUX |= (0x07 & usableChannels[counter]);
-    //bits que vna en 0 en el registo ADMUX
-    ADMUX &= ~(0x07 & usableChannels[counter]);
+    adcValues[ usableChannels[counter] ] = ADC;
     // se incrementa el contador
     counter = (counter+1)%N_CHANNELS;
+    // se configura el canal del ADC
+    switch (usableChannels[counter]){
+    case 0:
+        ADMUX &= ~(1 << MUX0);
+        ADMUX &= ~(1 << MUX1);
+        ADMUX &= ~(1 << MUX2);
+        break;
+    case 1:
+        ADMUX |= (1 << MUX0);
+        ADMUX &= ~(1 << MUX1);
+        ADMUX &= ~(1 << MUX2);
+        break;
+    case 2:
+        ADMUX &= ~(1 << MUX0);
+        ADMUX |= (1 << MUX1);
+        ADMUX &= ~(1 << MUX2);
+        break;
+    case 3:
+        ADMUX |= (1 << MUX0);
+        ADMUX |= (1 << MUX1);
+        ADMUX &= ~(1 << MUX2);
+        break;
+    case 7:
+        ADMUX |= (1 << MUX0);
+        ADMUX |= (1 << MUX1);
+        ADMUX |= (1 << MUX2);
+        break;
+    default:
+        break;
+    }
+
     return;
 }
 
@@ -77,7 +115,7 @@ ISR(TIMER2_COMPA_vect){
     // se inicia la conversion del ADC
     ADCSRA |= (1 << ADSC);
     // se ejecuta la funcion adicional
-    additionalProcessing();
+    //additionalProcessing();
     return;
 }
 
