@@ -20,7 +20,7 @@
 #define PORT_LED_NIMH PORTC //  puerto al que pertenece el IO del led NIMH
 #define PIN_PORT_NIMH 5 // pin del puerto utilizado para led NIMH
 #define DDR_LED_LION DDRC //  puerto al que pertenece el IO del led LION
-#define PORT_LED_LION DDRC //  puerto al que pertenece el IO del led LION
+#define PORT_LED_LION PORTC //  puerto al que pertenece el IO del led LION
 #define PIN_PORT_LION 4 // pin del puerto utilizado para led LION
 //---------------- CONTROL BUCK ------------------------------------------
 #define DDR_BUCK_CTR DDRD // puerto al que pertenece el io para encender el buck
