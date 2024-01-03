@@ -23,6 +23,29 @@ void main(void) {
         nimhLedOff();
         lionLedOn();
         _delay_ms(1000);
+        //control de buck
+        buckOff();
+        _delay_ms(500);
+        buckOn();
+        _delay_ms(500);
+        
+        //control de carga
+        chargeLionOn();
+        chargeNimhOff();
+        _delay_ms(1000);
+        chargeLionOff();
+        chargeNimhOn();
+        _delay_ms(1000);
+        
+        //control de alimentacion
+        supplyLionOn();
+        supplyNimhOff();
+        _delay_ms(1000);
+        supplyLionOff();
+        supplyNimhOn();
+        _delay_ms(1000);
+        
+
     }
     
 
