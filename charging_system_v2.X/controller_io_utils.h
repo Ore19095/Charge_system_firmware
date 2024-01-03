@@ -16,9 +16,9 @@
 // recomienda cambiar a menos que se redise�e el circuito impreso
 
 // --------------- INDICADORES LED ---------------------------------------
-#define DDR_LED_NIMH DDRC //  puerto al que pertenece el IO del led NIMH
-#define PORT_LED_NIMH PORTC //  puerto al que pertenece el IO del led NIMH
-#define PIN_PORT_NIMH 5 // pin del puerto utilizado para led NIMH
+#define DDR_LED_NIMH DDRB //  puerto al que pertenece el IO del led NIMH
+#define PORT_LED_NIMH PORTB //  puerto al que pertenece el IO del led NIMH
+#define PIN_PORT_NIMH 6 // pin del puerto utilizado para led NIMH
 #define DDR_LED_LION DDRB //  puerto al que pertenece el IO del led LION
 #define PORT_LED_LION PORTB //  puerto al que pertenece el IO del led LION
 #define PIN_PORT_LION 7 // pin del puerto utilizado para led LION
