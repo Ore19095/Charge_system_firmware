@@ -18,8 +18,10 @@ void main(void) {
 
     while (1){
         nimhLedOn();
+        lionLedOff();
         _delay_ms(1000);
         nimhLedOff();
+        lionLedOn();
         _delay_ms(1000);
     }
     
