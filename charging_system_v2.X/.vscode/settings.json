@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "controller_io_utils.h": "c"
+        "controller_io_utils.h": "c",
+        "adc_utils.h": "c",
+        "xc.h": "c"
     }
 }

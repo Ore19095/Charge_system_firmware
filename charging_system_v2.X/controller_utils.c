@@ -1,6 +1,21 @@
 #include "controller_io_utils.h"
 #include <stdint.h>
 
+void configurePorts(){
+    // configuracion de puertos de salida
+    DDR_LED_NIMH |= (1 << PIN_PORT_NIMH);
+    DDR_LED_LION |= (1 << PIN_PORT_LION);
+    
+    DDR_BUCK_CTR |= (1 << PIN_PORT_BUCK_CTR);
+    
+    DDR_CHARGE_LION |= (1 << PIN_CHARGE_LION);
+    DDR_CHARGE_NIMH |= (1 << PIN_CHARGE_NIMH);
+    
+    DDR_SUPPLY_LION |= (1 << PIN_SUPPLY_LION);
+    DDR_SUPPLY_NIMH |= (1 << PIN_SUPPLY_NIMH);
+    return;
+}
+
 void nimhLedOn(){
     PORT_LED_NIMH |= (1 << PIN_PORT_NIMH);
 }

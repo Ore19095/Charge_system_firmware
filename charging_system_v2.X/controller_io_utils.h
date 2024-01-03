@@ -16,26 +16,37 @@
 // recomienda cambiar a menos que se redise�e el circuito impreso
 
 // --------------- INDICADORES LED ---------------------------------------
-#define PORT_LED_NIMH PORTB //  puerto al que pertenece el IO del led NIMH
-#define PIN_PORT_NIMH 6 // pin del puerto utilizado para led NIMH
+#define DDR_LED_NIMH DDRC //  puerto al que pertenece el IO del led NIMH
+#define PORT_LED_NIMH PORTC //  puerto al que pertenece el IO del led NIMH
+#define PIN_PORT_NIMH 5 // pin del puerto utilizado para led NIMH
+#define DDR_LED_LION DDRB //  puerto al que pertenece el IO del led LION
 #define PORT_LED_LION PORTB //  puerto al que pertenece el IO del led LION
 #define PIN_PORT_LION 7 // pin del puerto utilizado para led LION
 //---------------- CONTROL BUCK ------------------------------------------
+#define DDR_BUCK_CTR DDRD // puerto al que pertenece el io para encender el buck
 #define PORT_BUCK_CTR PORTD // puerto al que pertenece el io para encender el buck
 #define PIN_PORT_BUCK_CTR 5// pin del puerto utilizado para controlar el buck
 //---------------- POWER SWITCHES ----------------------------------------
+#define DDR_CHARGE_LION DDRD // puerto que pertenece el io para cargar lion
 #define PORT_CHARGE_LION PORTD // puerto que pertenece el io para cargar lion
 #define PIN_CHARGE_LION 7 // pin del puerto PORT_CHARGE_LION usado para activar el switch
+
+#define DDR_CHARGE_NIMH DDRB // puerto que pertenece el io para cargar nimh
 #define PORT_CHARGE_NIMH PORTB // puerto que pertenece el io para cargar nimh
 #define PIN_CHARGE_NIMH 0 // pin del puerto PORT_CHARGE_NIMH usado para activar el switch
 
+#define DDR_SUPPLY_LION DDRD // puerto que pertenece el io para alimentar con lion
 #define PORT_SUPPLY_LION PORTD // puerto que pertenece el io para alimentar con lion
 #define PIN_SUPPLY_LION 4 // pin del puerto PORT_SUPPLY_LION usado para activar el switch
+
+#define DDR_SUPPLY_NIMH DDRB // puerto que pertenece el io para alimentar nimh
 #define PORT_SUPPLY_NIMH PORTB // puerto que pertenece el io para alimentar nimh
 #define PIN_SUPPLY_NIMH 2 // pin del puerto PORT_SUPPLY_NIMH usado para activar el switch
 
 
 // -------------------- PROTOTIPOS DE FUNCIONES --------------------------
+
+void configurePorts(); // configura los puertos de salida
 
 void nimhLedOn(); // enciende el led indicador de bateria NIMH
 void nimhLedOff(); // apaga el led indicador de bateria NIMH
