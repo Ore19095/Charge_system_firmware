@@ -96,15 +96,62 @@ void FSMChargeLiON(){
 
 // ------------------ PID -------------------
 #define PID_Fs 1000 // frecuencia de muestreo del PID
-#define PID_D -2.244e-4
-#define PID_I -500.5
-#define PID_P -1.2515
+#define D_VOLTAGE (-2.244e-4*PID_Fs)
+#define I_VOLTAGE (-500.5/PID_Fs)
+#define P_VOLTAGE -1.2515
 //PID for current control
-#define PID_D_CUR -4.244e-4/5
-#define PID_I_CUR -350.5/10
-#define PID_P_CUR -1.2515/10
+#define D_CURRENT ((-4.244e-4/5)*PID_Fs)
+#define I_CURRENT ((-350.5/10)/PID_Fs)
+#define P_CURRENT -1.2515/10
+// pid variables
+float error = 0;
+float errorPrev = 0;
+float errorSum = 0;
+float pidReference = 0;
+float pidReferenceTop = 0;
 
+void startPID(float reference){
+    error = 0;
+    errorPrev = 0;
+    errorSum = 0;
+    pidReference = 0;
+    pidReferenceTop = reference;
+    return;
+}
 
+void calculatePIDCurrent(){
+    float pidOutput;
+    // se calcula el error y se actualiza la suma de errores
+    error = pidReference - readADC(BUCK_I_CHANNEL);
+    errorSum += error;
+    // se calcula la salida del PID
+    pidOutput = P_CURRENT*error + I_CURRENT*errorSum + D_CURRENT*(error-errorPrev);
+    // se actualiza el valor previo del error
+    errorPrev = error;
+    // se limita la salida del PID
+    if(pidOutput>1023) pidOutput = 1023;
+    if(pidOutput<0) pidOutput = 0;
+    // se actualiza el valor del PWM
+    setPWM((uint16_t)pidOutput);
+    return;
+}
+
+void calculatePIDVoltage(){
+    float pidOutput;
+    // se calcula el error y se actualiza la suma de errores
+    error = pidReference - readADC(BUCK_V_CHANNEL);
+    errorSum += error;
+    // se calcula la salida del PID
+    pidOutput = P_VOLTAGE*error + I_VOLTAGE*errorSum + D_VOLTAGE*(error-errorPrev);
+    // se actualiza el valor previo del error
+    errorPrev = error;
+    // se limita la salida del PID
+    if(pidOutput>1023) pidOutput = 1023;
+    if(pidOutput<0) pidOutput = 0;
+    // se actualiza el valor del PWM
+    setPWM((uint16_t)pidOutput);
+    return;
+}
 // ------------------ UART ------------------
 void send_data(const char* data, uint8_t num){
     for (int i=0; i<num && data[i]!=0; i++ ) {
