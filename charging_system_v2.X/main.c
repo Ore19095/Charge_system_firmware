@@ -24,9 +24,7 @@ void main(void){
     configureADC();
     configureTimer2();
     sei();
-
-    setAdicionalProcessing(externFunct);
-
+    
     while (1){
       
 
