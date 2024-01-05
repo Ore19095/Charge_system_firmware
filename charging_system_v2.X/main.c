@@ -22,6 +22,12 @@
 #define LION_V_CHANNEL 2 // canal de voltaje bateria LiON
 #define BUCK_I_CHANNEL 3 // Canal de la medicion de corriente
 #define SOURCE_CHANNEL 7 // Canal de la fuente de voltaje
+
+typedef enum {
+    PID_VOLTAGE,
+    PID_CURRENT
+    } PID_MODES;
+
 //------------------ Prototipos ------------------
 void conf_uart(void);
 void send_data(const char* data, uint8_t num);
@@ -29,6 +35,10 @@ void externFunct(void);
 void configureTimer0(void);
 void configureTimer1(void);
 void setPWM(uint16_t dutyCycle);
+
+void startPID(float reference, PID_MODES mode);
+void calculatePIDCurrent();
+void calculatePIDVoltage();
 
 void main(void){
     conf_uart();
@@ -75,7 +85,7 @@ void FSMChargeLiON(){
             break;
         case 1:
             // iniciar estados del PID
-            startPID(I_LION_CHARGE); // se establece la corrinte que debe de cargar
+            startPID(I_LION_CHARGE,PID_CURRENT); // se establece la corrinte que debe de cargar
             chargeLionState = 2;
         case 2:
             // Cargar la bateria hasta que el voltaje sea mayor a 4.2V
@@ -112,11 +122,6 @@ float pidReference = 0;
 float pidReferenceTop = 0;
 // pid a ejecutar
 void (*pidFunction)(void) = &calculatePIDVoltage;
-
-typedef enum {
-    PID_VOLTAGE,
-    PID_CURRENT
-    } PID_MODES;
 
 void startPID(float reference, PID_MODES mode){
     error = 0;
