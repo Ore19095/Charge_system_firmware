@@ -1,11 +1,26 @@
 #include "adc_utils.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+
 uint8_t usableChannels[N_CHANNELS] = {1, 0, 2, 3, 7}; // canales a muestrear
 uint16_t const prescalers[N_PRESCALERS] = {1, 8, 32, 64, 128, 256, 1024};
 uint16_t adcValues[N_CHANNELS_ADC];
 uint8_t counter = 0;
 
 void emptyFunction(void);
+
+void send_data2(const char* data, uint8_t num){
+    for (int i=0; i<num && data[i]!=0; i++ ) {
+        while( !( UCSR0A&(1<<UDRE0))  );
+        UDR0 = data[i];
+        //uartBuffer[writePointer] = data[i];
+        //writePointer=(writePointer+1)%UART_BUFFER;
+    }
+    //UCSR0B |= 1<<UDRIE0; // HAbilitar interrupcion
+    return;
+}
+
 
 void (*additionalProcessing)(void) = emptyFunction;
 /**
@@ -24,15 +39,27 @@ void configureTimer2(){
     TCCR2A &= ~(1 << WGM20);
     TCCR2B &= ~(1 << WGM22);
     // se configura el prescaler (beta, harcode si no funciona mañana)
-    // for(int i = 0; i < N_PRESCALERS; i++){
-    //     ocraValue = F_OSC/(prescalers[i]*F_SAMPLE*N_CHANNELS) - 1;
-    //     // si el valor calculado es mayor a 255, se prueba con el siguiente prescaler
-    //     if(ocraValue>255) continue;
-    //     else break; // si el valor es menor o igual a 255, se sale del ciclo
-    // }
+    char buf[10];
+    for(int i = 0; i < N_PRESCALERS; i++){
+        ocraValue = F_OSC/(prescalers[i]*F_SAMPLE*N_CHANNELS) - 1;
+        // si el valor calculado es mayor a 255, se prueba con el siguiente prescaler
+        if(ocraValue>255) continue;
+        else{
+            send_data2("Prescaler: ",11);
+            
+            sprintf(buf,"%d\n",prescalers[i]);
+            send_data2(buf,10);
+            
+            break; // si el valor es menor o igual a 255, se sale del ciclo
+        } 
+    }
+
+    sprintf(buf,"%d\n",ocraValue);
+    send_data2(buf,10);
+
     // Prescalador de 64 CS2[2:0] = 0b011
-    TCCR2B |= (1 << CS21) | (1 << CS20);
-    TCCR2B &= ~(1 << CS22);
+    // TCCR2B |= (1 << CS21) | (1 << CS20);
+    // TCCR2B &= ~(1 << CS22);
     // se actualiza el registro OCR2A con el valor calculado
     OCR2A = (uint8_t) 123;
     // Se habilita la interrupcion por comparacion con OCR2A

@@ -18,30 +18,32 @@
 void conf_uart(void);
 void send_data(const char* data, uint8_t num);
 void main(void){
+    conf_uart();
     configureADC();
     configureTimer2();
-    conf_uart();
     sei();
 
+    // ver que valor de prescalador se colocó
     char buf[10];
 
+
     while (1){
-        sprintf(buf,"%d",readADC(0));
-        send_data(buf,10);
-        send_data(",",1);
-        sprintf(buf,"%d",readADC(1));
-        send_data(buf,10);
-        send_data(",",1);
-        sprintf(buf,"%d",readADC(2));
-        send_data(buf,10);
-        send_data(",",1);
-        sprintf(buf,"%d",readADC(3));       
-        send_data(buf,10);
-        send_data(",",1);
-        sprintf(buf,"%d",readADC(7));  
-        send_data(buf,10);
-        send_data("\n",1);
-        _delay_ms(100);
+        // sprintf(buf,"%d",readADC(0));
+        // send_data(buf,10);
+        // send_data(",",1);
+        // sprintf(buf,"%d",readADC(1));
+        // send_data(buf,10);
+        // send_data(",",1);
+        // sprintf(buf,"%d",readADC(2));
+        // send_data(buf,10);
+        // send_data(",",1);
+        // sprintf(buf,"%d",readADC(3));       
+        // send_data(buf,10);
+        // send_data(",",1);
+        // sprintf(buf,"%d",readADC(7));  
+        // send_data(buf,10);
+        // send_data("\n",1);
+        // _delay_ms(100);
         
     }
     
