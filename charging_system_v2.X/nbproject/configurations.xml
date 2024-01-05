@@ -7,6 +7,7 @@
       <itemPath>controller_io_utils.h</itemPath>
       <itemPath>adc_utils.h</itemPath>
       <itemPath>NiMH_definitions.h</itemPath>
+      <itemPath>LiON_definitions.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
