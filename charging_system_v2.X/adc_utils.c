@@ -178,7 +178,7 @@ ISR(TIMER2_COMPA_vect){
     // se inicia la conversion del ADC
     ADCSRA |= (1 << ADSC);
     // se ejecuta la funcion adicional
-    //additionalProcessing();
+    additionalProcessing();
     return;
 }
 

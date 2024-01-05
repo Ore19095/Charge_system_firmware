@@ -17,19 +17,29 @@
 
 void conf_uart(void);
 void send_data(const char* data, uint8_t num);
+void externFunct(void);
+
 void main(void){
     conf_uart();
     configureADC();
     configureTimer2();
     sei();
 
+    setAdicionalProcessing(externFunct);
+
     while (1){
       
+
         
     }
     
 
     return;
+}
+
+void externFunct(void){
+    // funcion para probar la ejecucion de una funcion externa con el timer2
+    send_data("HOLA\n",5);
 }
 
 void send_data(const char* data, uint8_t num){
