@@ -25,7 +25,11 @@ void main(void){
 
     // ver que valor de prescalador se colocó
     char buf[10];
-
+    sprintf(buf,"%d\n",OCR2A);
+    send_data(buf,10);
+    sprintf(buf,"%d\n",(TCCR2B&7));
+    send_data(buf,10);
+        
 
     while (1){
         // sprintf(buf,"%d",readADC(0));

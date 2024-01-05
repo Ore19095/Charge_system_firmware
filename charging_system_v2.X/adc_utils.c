@@ -40,28 +40,64 @@ void configureTimer2(){
     TCCR2B &= ~(1 << WGM22);
     // se configura el prescaler (beta, harcode si no funciona mañana)
     char buf[10];
-    for(int i = 0; i < N_PRESCALERS; i++){
+    int i;
+    for(i = 0; i < N_PRESCALERS; i++){
         ocraValue = F_OSC/(prescalers[i]*F_SAMPLE*N_CHANNELS) - 1;
         // si el valor calculado es mayor a 255, se prueba con el siguiente prescaler
         if(ocraValue>255) continue;
-        else{
-            send_data2("Prescaler: ",11);
-            
-            sprintf(buf,"%d\n",prescalers[i]);
-            send_data2(buf,10);
-            
-            break; // si el valor es menor o igual a 255, se sale del ciclo
-        } 
+        else break; // si el valor es menor o igual a 255, se sale del ciclo
+    }
+    // se establece el prescaler
+    switch (i)
+    {
+    case 0:
+        // Prescalador de 1 CS2[2:0] = 0b001
+        TCCR2B |= (1 << CS20);
+        TCCR2B &= ~(1 << CS21);
+        TCCR2B &= ~(1 << CS22);
+        break;
+    case 1:
+        //Prescalador de 8
+        TCCR2B &= ~(1 << CS20);
+        TCCR2B |= (1 << CS21);
+        TCCR2B &= ~(1 << CS22);
+        break;
+    case 2:
+        // Prescalador de 32 CS2[2:0] = 0b011
+        TCCR2B |= (1 << CS21) | (1 << CS20);
+        TCCR2B &= ~(1 << CS22);
+        break;
+    case 3:
+        //Prescalador de 64 CS2[2:0] = 0b100
+        TCCR2B |= (1 << CS22);
+        TCCR2B &= ~(1 << CS21);
+        TCCR2B &= ~(1 << CS20);
+        break;
+    case 4:
+        // Prescalador de 128 CS2[2:0] = 0b101
+        TCCR2B |= (1 << CS22);
+        TCCR2B &= ~(1 << CS21);
+        TCCR2B |= (1 << CS20);
+
+        break;
+    case 5:
+        // Prescalador de 256 CS2[2:0] = 0b110
+        TCCR2B |= (1 << CS22);
+        TCCR2B |= (1 << CS21);
+        TCCR2B &= ~(1 << CS20);
+        break;
+    case 6:
+        // Prescalador de 1024 CS2[2:0] = 0b111
+        TCCR2B |= (1 << CS22);
+        TCCR2B |= (1 << CS21);
+        TCCR2B |= (1 << CS20);
+        break;
+    default:
+        break;
     }
 
-    sprintf(buf,"%d\n",ocraValue);
-    send_data2(buf,10);
-
-    // Prescalador de 64 CS2[2:0] = 0b011
-    // TCCR2B |= (1 << CS21) | (1 << CS20);
-    // TCCR2B &= ~(1 << CS22);
     // se actualiza el registro OCR2A con el valor calculado
-    OCR2A = (uint8_t) 123;
+    OCR2A = (uint8_t) ocraValue;
     // Se habilita la interrupcion por comparacion con OCR2A
     TIMSK2 |= (1 << OCIE2A);
     // se enciende el ADC
