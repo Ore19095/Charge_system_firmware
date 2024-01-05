@@ -86,16 +86,27 @@ void FSMChargeLiON(){
         case 1:
             // iniciar estados del PID
             startPID(I_LION_CHARGE,PID_CURRENT); // se establece la corrinte que debe de cargar
+            buckOn(); //se enciende el controlador buck
+            chargeLionOn(); // se enciende el controlador de carga
+            supplyLionOff(); // se apaga la fuente de voltaje
             chargeLionState = 2;
         case 2:
             // Cargar la bateria hasta que el voltaje sea mayor a 4.2V
+            calculatePIDCurrent();
             if (readADC(LION_V_CHANNEL) > V_LION_FULL){
                 chargeLionState = 2; // carga completa
             }
             break;
         case 3:
+            // se cambia a modo de voltaje constante
+            startPID(V_LION_FULL,PID_VOLTAGE);
+            chargeLionState = 4;
+        case 4:
             // se completa la carga hasta que la corriente sea menor a 0.15A
+            
             if (readADC(BUCK_I_CHANNEL) < I_LION_STOP_CHARGE){
+                chargeLionOff(); // se apaga el controlador de carga
+                buckOff(); // se apaga el controlador buck
                 chargeLionState = 0; // carga completa
             }
             break;
