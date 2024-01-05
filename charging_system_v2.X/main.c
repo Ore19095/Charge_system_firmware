@@ -23,31 +23,8 @@ void main(void){
     configureTimer2();
     sei();
 
-    // ver que valor de prescalador se colocó
-    char buf[10];
-    sprintf(buf,"%d\n",OCR2A);
-    send_data(buf,10);
-    sprintf(buf,"%d\n",(TCCR2B&7));
-    send_data(buf,10);
-        
-
     while (1){
-        // sprintf(buf,"%d",readADC(0));
-        // send_data(buf,10);
-        // send_data(",",1);
-        // sprintf(buf,"%d",readADC(1));
-        // send_data(buf,10);
-        // send_data(",",1);
-        // sprintf(buf,"%d",readADC(2));
-        // send_data(buf,10);
-        // send_data(",",1);
-        // sprintf(buf,"%d",readADC(3));       
-        // send_data(buf,10);
-        // send_data(",",1);
-        // sprintf(buf,"%d",readADC(7));  
-        // send_data(buf,10);
-        // send_data("\n",1);
-        // _delay_ms(100);
+      
         
     }
     
