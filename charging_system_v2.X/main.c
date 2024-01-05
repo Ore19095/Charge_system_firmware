@@ -75,7 +75,7 @@ void FSMChargeLiON(){
             break;
         case 1:
             // iniciar estados del PID
-
+            startPID(I_LION_CHARGE); // se establece la corrinte que debe de cargar
             chargeLionState = 2;
         case 2:
             // Cargar la bateria hasta que el voltaje sea mayor a 4.2V
@@ -83,7 +83,7 @@ void FSMChargeLiON(){
                 chargeLionState = 2; // carga completa
             }
             break;
-        case 2:
+        case 3:
             // se completa la carga hasta que la corriente sea menor a 0.15A
             if (readADC(BUCK_I_CHANNEL) < I_LION_STOP_CHARGE){
                 chargeLionState = 0; // carga completa
@@ -103,23 +103,37 @@ void FSMChargeLiON(){
 #define D_CURRENT ((-4.244e-4/5)*PID_Fs)
 #define I_CURRENT ((-350.5/10)/PID_Fs)
 #define P_CURRENT -1.2515/10
+#define PID_INCREMENT 10
 // pid variables
 float error = 0;
 float errorPrev = 0;
 float errorSum = 0;
 float pidReference = 0;
 float pidReferenceTop = 0;
+// pid a ejecutar
+void (*pidFunction)(void) = &calculatePIDVoltage;
 
-void startPID(float reference){
+typedef enum {
+    PID_VOLTAGE,
+    PID_CURRENT
+    } PID_MODES;
+
+void startPID(float reference, PID_MODES mode){
     error = 0;
     errorPrev = 0;
     errorSum = 0;
-    pidReference = 0;
+    pidReference = (mode==PID_CURRENT)? 0: reference;
+    pidFunction = (mode==PID_CURRENT)? &calculatePIDCurrent: &calculatePIDVoltage;
     pidReferenceTop = reference;
     return;
 }
 
 void calculatePIDCurrent(){
+    static uint8_t counter = 0;
+    if (counter++ == PID_INCREMENT){
+        counter = 0;
+        if(pidReference<pidReferenceTop) pidReference++;
+    }
     float pidOutput;
     // se calcula el error y se actualiza la suma de errores
     error = pidReference - readADC(BUCK_I_CHANNEL);
@@ -138,6 +152,7 @@ void calculatePIDCurrent(){
 
 void calculatePIDVoltage(){
     float pidOutput;
+    // se actualiza el valor top del PID
     // se calcula el error y se actualiza la suma de errores
     error = pidReference - readADC(BUCK_V_CHANNEL);
     errorSum += error;
