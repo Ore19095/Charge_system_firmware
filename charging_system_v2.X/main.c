@@ -16,7 +16,12 @@
 #include "adc_utils.h"
 #include "LiON_definitions.h"
 #include "NiMH_definitions.h"
-
+// ------------------ Definiciones ------------------
+#define BUCK_V_CHANNEL 0 // canal de voltaje de salida del buck
+#define NiMH_V_CHANNEL 1 // canal de voltaje bateria NiMH
+#define LION_V_CHANNEL 2 // canal de voltaje bateria LiON
+#define BUCK_I_CHANNEL 3 // Canal de la medicion de corriente
+#define SOURCE_CHANNEL 7 // Canal de la fuente de voltaje
 //------------------ Prototipos ------------------
 void conf_uart(void);
 void send_data(const char* data, uint8_t num);
@@ -40,11 +45,66 @@ void main(void){
 
     return;
 }
+// ----------------- funciones --------------
 
-void externFunct(void){
-    // funcion para probar la ejecucion de una funcion externa con el timer2
-    send_data("HOLA\n",5);
+/** Funcion que determina si la placa esta conectada a la estación de
+ *  carga, esto se determina midiendo el voltaje de la fuente de voltaje
+ *  y si es mayor a 9V se considera que la placa esta conectada a la 
+ *  estación de carga, si es menor se considera que está conectada a la
+ *  las baterias del carro.
+ */
+#define STATION_TRESHOLD 431
+uint8_t isConnected(void){
+    uint16_t sourceVoltage = readADC(SOURCE_CHANNEL);
+    
+    if (sourceVoltage > STATION_TRESHOLD){
+        return 1;
+    }
+    return 0;
 }
+
+// ----------------- funciones FSM ----------
+uint8_t chargeLionState = 0;
+void FSMChargeLiON(){
+    switch(chargeLionState){
+        case 0:
+            // Esperar a que el voltaje de la bateria sea menora 3V
+            if (readADC(LION_V_CHANNEL) < V_LION_EMPTY && isConnected()){
+                chargeLionState = 1; //inicia la carga
+            }
+            break;
+        case 1:
+            // iniciar estados del PID
+
+            chargeLionState = 2;
+        case 2:
+            // Cargar la bateria hasta que el voltaje sea mayor a 4.2V
+            if (readADC(LION_V_CHANNEL) > V_LION_FULL){
+                chargeLionState = 2; // carga completa
+            }
+            break;
+        case 2:
+            // se completa la carga hasta que la corriente sea menor a 0.15A
+            if (readADC(BUCK_I_CHANNEL) < I_LION_STOP_CHARGE){
+                chargeLionState = 0; // carga completa
+            }
+            break;
+
+    }
+    return;
+}
+
+// ------------------ PID -------------------
+#define PID_Fs 1000 // frecuencia de muestreo del PID
+#define PID_D -2.244e-4
+#define PID_I -500.5
+#define PID_P -1.2515
+//PID for current control
+#define PID_D_CUR -4.244e-4/5
+#define PID_I_CUR -350.5/10
+#define PID_P_CUR -1.2515/10
+
+
 // ------------------ UART ------------------
 void send_data(const char* data, uint8_t num){
     for (int i=0; i<num && data[i]!=0; i++ ) {
