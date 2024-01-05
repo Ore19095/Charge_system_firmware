@@ -18,7 +18,7 @@
 #include "NiMH_definitions.h"
 // ------------------ Definiciones ------------------
 #define BUCK_V_CHANNEL 0 // canal de voltaje de salida del buck
-#define NiMH_V_CHANNEL 1 // canal de voltaje bateria NiMH
+#define NIMH_V_CHANNEL 1 // canal de voltaje bateria NiMH
 #define LION_V_CHANNEL 2 // canal de voltaje bateria LiON
 #define BUCK_I_CHANNEL 3 // Canal de la medicion de corriente
 #define SOURCE_CHANNEL 7 // Canal de la fuente de voltaje
@@ -28,6 +28,7 @@ typedef enum {
     PID_CURRENT
     } PID_MODES;
 
+uint64_t milis = 0;
 //------------------ Prototipos ------------------
 void conf_uart(void);
 void send_data(const char* data, uint8_t num);
@@ -111,6 +112,33 @@ void FSMChargeLiON(){
             }
             break;
 
+    }
+    return;
+}
+
+ uint8_t chargeNiMHState = 0;
+void FSMChargeNiMH(){
+    switch(chargeNiMHState){
+        case 0:
+            // Esperar a que el voltaje de la bateria sea menora 3V
+            if (readADC(NIMH_V_CHANNEL) < V_NIMH_EMPTY && isConnected() && chargeLionState==0){
+                chargeNiMHState = 1; //inicia la carga
+            }
+            break;
+        case 1:
+            // iniciar estados del PID
+            startPID(I_NIMH_CHARGE,PID_CURRENT); // se establece la corrinte que debe de cargar
+            buckOn(); //se enciende el controlador buck
+            chargeNiMHOn(); // se enciende el controlador de carga
+            supplyNiMHOff(); // se apaga la fuente de voltaje
+            chargeNiMHState = 2;
+        case 2:
+            // Cargar la bateria hasta que el voltaje sea mayor a 4.2V
+            calculatePIDCurrent();
+            if (readADC(NIMH_V_CHANNEL) > V_NIMH_FULL){
+                chargeNiMHState = 0; // carga completa
+            }
+            break;
     }
     return;
 }
