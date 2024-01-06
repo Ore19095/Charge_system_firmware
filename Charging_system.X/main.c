@@ -5,9 +5,6 @@
  * Created on September 20, 2023, 7:03 PM
  */
 
-// ---------------   FUSES    ---------------------------
-
-
 //---------------- CONSTANTES --------------------------
 
 #define F_CPU 8000000L
@@ -18,6 +15,9 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <avr/io.h>
+
+#include "controller_io_utils.h"
+
 // --------------- DEFINICIONES --------------------------
 #define UART_BUFFER 64
 //----------------- limites ----------------

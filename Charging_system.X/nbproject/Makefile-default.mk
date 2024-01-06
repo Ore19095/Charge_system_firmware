@@ -51,17 +51,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=main.c configurations.c pid.c
+SOURCEFILES_QUOTED_IF_SPACED=main.c controller_utils.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/main.o ${OBJECTDIR}/configurations.o ${OBJECTDIR}/pid.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/main.o.d ${OBJECTDIR}/configurations.o.d ${OBJECTDIR}/pid.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/main.o ${OBJECTDIR}/controller_utils.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/main.o.d ${OBJECTDIR}/controller_utils.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/main.o ${OBJECTDIR}/configurations.o ${OBJECTDIR}/pid.o
+OBJECTFILES=${OBJECTDIR}/main.o ${OBJECTDIR}/controller_utils.o
 
 # Source Files
-SOURCEFILES=main.c configurations.c pid.c
+SOURCEFILES=main.c controller_utils.c
 
 
 
@@ -94,17 +94,11 @@ ${OBJECTDIR}/main.o: main.c  .generated_files/flags/default/d67c21544e7a53197e62
 	@${RM} ${OBJECTDIR}/main.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -D__DEBUG=1 -g -DDEBUG  -gdwarf-2  -x c -D__$(MP_PROCESSOR_OPTION)__   -mdfp="${DFP_DIR}/xc8"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fshort-enums -fno-common -funsigned-char -funsigned-bitfields -Wall -DXPRJ_default=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3 -mconst-data-in-progmem -mno-const-data-in-config-mapped-progmem     -MD -MP -MF "${OBJECTDIR}/main.o.d" -MT "${OBJECTDIR}/main.o.d" -MT ${OBJECTDIR}/main.o -o ${OBJECTDIR}/main.o main.c 
 	
-${OBJECTDIR}/configurations.o: configurations.c  .generated_files/flags/default/705824e6d9a141bbcbf777eb58625f8e6f0485f6 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/controller_utils.o: controller_utils.c  .generated_files/flags/default/1411ff1dc7b8764b3533976cb099227d2579c716 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/configurations.o.d 
-	@${RM} ${OBJECTDIR}/configurations.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -D__DEBUG=1 -g -DDEBUG  -gdwarf-2  -x c -D__$(MP_PROCESSOR_OPTION)__   -mdfp="${DFP_DIR}/xc8"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fshort-enums -fno-common -funsigned-char -funsigned-bitfields -Wall -DXPRJ_default=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3 -mconst-data-in-progmem -mno-const-data-in-config-mapped-progmem     -MD -MP -MF "${OBJECTDIR}/configurations.o.d" -MT "${OBJECTDIR}/configurations.o.d" -MT ${OBJECTDIR}/configurations.o -o ${OBJECTDIR}/configurations.o configurations.c 
-	
-${OBJECTDIR}/pid.o: pid.c  .generated_files/flags/default/db4d3fecd7bbe308a3fdb36a88bc0f00fe5629fe .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
-	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/pid.o.d 
-	@${RM} ${OBJECTDIR}/pid.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -D__DEBUG=1 -g -DDEBUG  -gdwarf-2  -x c -D__$(MP_PROCESSOR_OPTION)__   -mdfp="${DFP_DIR}/xc8"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fshort-enums -fno-common -funsigned-char -funsigned-bitfields -Wall -DXPRJ_default=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3 -mconst-data-in-progmem -mno-const-data-in-config-mapped-progmem     -MD -MP -MF "${OBJECTDIR}/pid.o.d" -MT "${OBJECTDIR}/pid.o.d" -MT ${OBJECTDIR}/pid.o -o ${OBJECTDIR}/pid.o pid.c 
+	@${RM} ${OBJECTDIR}/controller_utils.o.d 
+	@${RM} ${OBJECTDIR}/controller_utils.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -D__DEBUG=1 -g -DDEBUG  -gdwarf-2  -x c -D__$(MP_PROCESSOR_OPTION)__   -mdfp="${DFP_DIR}/xc8"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fshort-enums -fno-common -funsigned-char -funsigned-bitfields -Wall -DXPRJ_default=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3 -mconst-data-in-progmem -mno-const-data-in-config-mapped-progmem     -MD -MP -MF "${OBJECTDIR}/controller_utils.o.d" -MT "${OBJECTDIR}/controller_utils.o.d" -MT ${OBJECTDIR}/controller_utils.o -o ${OBJECTDIR}/controller_utils.o controller_utils.c 
 	
 else
 ${OBJECTDIR}/main.o: main.c  .generated_files/flags/default/683aab62a73616c66930c204184adec0a9816a5d .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
@@ -113,17 +107,11 @@ ${OBJECTDIR}/main.o: main.c  .generated_files/flags/default/683aab62a73616c66930
 	@${RM} ${OBJECTDIR}/main.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -x c -D__$(MP_PROCESSOR_OPTION)__   -mdfp="${DFP_DIR}/xc8"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fshort-enums -fno-common -funsigned-char -funsigned-bitfields -Wall -DXPRJ_default=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3 -mconst-data-in-progmem -mno-const-data-in-config-mapped-progmem     -MD -MP -MF "${OBJECTDIR}/main.o.d" -MT "${OBJECTDIR}/main.o.d" -MT ${OBJECTDIR}/main.o -o ${OBJECTDIR}/main.o main.c 
 	
-${OBJECTDIR}/configurations.o: configurations.c  .generated_files/flags/default/93eb3ff44d9850b6e21597d407ff9491b1829b5f .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/controller_utils.o: controller_utils.c  .generated_files/flags/default/95638ae3d9a182bdd7228e76418497564c9fd5ac .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/configurations.o.d 
-	@${RM} ${OBJECTDIR}/configurations.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -x c -D__$(MP_PROCESSOR_OPTION)__   -mdfp="${DFP_DIR}/xc8"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fshort-enums -fno-common -funsigned-char -funsigned-bitfields -Wall -DXPRJ_default=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3 -mconst-data-in-progmem -mno-const-data-in-config-mapped-progmem     -MD -MP -MF "${OBJECTDIR}/configurations.o.d" -MT "${OBJECTDIR}/configurations.o.d" -MT ${OBJECTDIR}/configurations.o -o ${OBJECTDIR}/configurations.o configurations.c 
-	
-${OBJECTDIR}/pid.o: pid.c  .generated_files/flags/default/a159f7b10242cf801d517fc5f3ac784339532420 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
-	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/pid.o.d 
-	@${RM} ${OBJECTDIR}/pid.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -x c -D__$(MP_PROCESSOR_OPTION)__   -mdfp="${DFP_DIR}/xc8"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fshort-enums -fno-common -funsigned-char -funsigned-bitfields -Wall -DXPRJ_default=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3 -mconst-data-in-progmem -mno-const-data-in-config-mapped-progmem     -MD -MP -MF "${OBJECTDIR}/pid.o.d" -MT "${OBJECTDIR}/pid.o.d" -MT ${OBJECTDIR}/pid.o -o ${OBJECTDIR}/pid.o pid.c 
+	@${RM} ${OBJECTDIR}/controller_utils.o.d 
+	@${RM} ${OBJECTDIR}/controller_utils.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -x c -D__$(MP_PROCESSOR_OPTION)__   -mdfp="${DFP_DIR}/xc8"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fshort-enums -fno-common -funsigned-char -funsigned-bitfields -Wall -DXPRJ_default=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3 -mconst-data-in-progmem -mno-const-data-in-config-mapped-progmem     -MD -MP -MF "${OBJECTDIR}/controller_utils.o.d" -MT "${OBJECTDIR}/controller_utils.o.d" -MT ${OBJECTDIR}/controller_utils.o -o ${OBJECTDIR}/controller_utils.o controller_utils.c 
 	
 endif
 

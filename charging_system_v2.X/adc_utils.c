@@ -134,54 +134,41 @@ uint16_t readADC(uint8_t channel){
 }
 
 /* Interrupcion del ADC*/
-ISR(ADC_vect){
-    // se guarda el valor d-el ADC en el buffer
-    adcValues[ usableChannels[counter] ] = ADC;
-    // se incrementa el contador
-    counter = (counter+1)%N_CHANNELS;
-    // se configura el canal del ADC
-    switch (usableChannels[counter]){
-    case 0:
-        ADMUX &= ~(1 << MUX0);
-        ADMUX &= ~(1 << MUX1);
-        ADMUX &= ~(1 << MUX2);
-        break;
-    case 1:
-        ADMUX |= (1 << MUX0);
-        ADMUX &= ~(1 << MUX1);
-        ADMUX &= ~(1 << MUX2);
-        break;
-    case 2:
-        ADMUX &= ~(1 << MUX0);
-        ADMUX |= (1 << MUX1);
-        ADMUX &= ~(1 << MUX2);
-        break;
-    case 3:
-        ADMUX |= (1 << MUX0);
-        ADMUX |= (1 << MUX1);
-        ADMUX &= ~(1 << MUX2);
-        break;
-    case 7:
-        ADMUX |= (1 << MUX0);
-        ADMUX |= (1 << MUX1);
-        ADMUX |= (1 << MUX2);
-        break;
-    default:
-        break;
-    }
+// ISR(ADC_vect){
+//     // se guarda el valor d-el ADC en el buffer
+//     adcValues[ usableChannels[counter] ] = ADC;
+//     // se incrementa el contador
+//     counter = (counter+1)%N_CHANNELS;
+//     // se configura el canal del ADC
+//     switch (usableChannels[counter]){
+//     case 0:
+//         ADMUX &= ~(1 << MUX0);
+//         ADMUX &= ~(1 << MUX1);
+//         ADMUX &= ~(1 << MUX2);
+//         break;
+//     case 1:
+//         ADMUX |= (1 << MUX0);
+//         ADMUX &= ~(1 << MUX1);
+//         ADMUX &= ~(1 << MUX2);
+//         break;
+//     case 2:
+//         ADMUX &= ~(1 << MUX0);
+//         ADMUX |= (1 << MUX1);
+//         ADMUX &= ~(1 << MUX2);
+//         break;
+//     case 3:
+//         ADMUX |= (1 << MUX0);
+//         ADMUX |= (1 << MUX1);
+//         ADMUX &= ~(1 << MUX2);
+//         break;
+//     case 7:
+//         ADMUX |= (1 << MUX0);
+//         ADMUX |= (1 << MUX1);
+//         ADMUX |= (1 << MUX2);
+//         break;
+//     default:
+//         break;
+//     }
 
-    return;
-}
-
-/* Interrupcion del Timer 2*/
-ISR(TIMER2_COMPA_vect){
-    // se inicia la conversion del ADC
-    ADCSRA |= (1 << ADSC);
-    // se ejecuta la funcion adicional
-    additionalProcessing();
-    return;
-}
-
-void emptyFunction(){
-    return;
-}
+//     return;
+// }

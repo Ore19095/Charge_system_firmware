@@ -28,6 +28,12 @@ typedef enum {
     PID_CURRENT
     } PID_MODES;
 
+uint16_t vAlimentacion;
+uint16_t buck_current;
+uint16_t vLion;
+uint16_t vNimh;
+uint16_t buck_voltage;
+
 //------------------ Prototipos ------------------
 void conf_uart(void);
 void send_data(const char* data, uint8_t num);
@@ -39,6 +45,7 @@ void setPWM(uint16_t dutyCycle);
 void startPID(float reference, PID_MODES mode);
 void calculatePIDCurrent();
 void calculatePIDVoltage();
+uint8_t isConnected(void);
 
 void main(void){
     conf_uart();
@@ -48,7 +55,7 @@ void main(void){
 
     while (1){
       
-
+        if(isConnected()) nimhLedOn();
         
     }
     
@@ -63,11 +70,10 @@ void main(void){
  *  estación de carga, si es menor se considera que está conectada a la
  *  las baterias del carro.
  */
-#define STATION_TRESHOLD 431
+#define STATION_TRESHOLD 323
 uint8_t isConnected(void){
-    uint16_t sourceVoltage = readADC(SOURCE_CHANNEL);
     
-    if (sourceVoltage > STATION_TRESHOLD){
+    if (vAlimentacion > STATION_TRESHOLD){
         return 1;
     }
     return 0;
@@ -252,3 +258,53 @@ void setPWM(uint16_t dutyCycle){
     OCR1A = dutyCycle;
     return;
 }
+
+// ---------------- INTERRUPCIONES -------------------------
+
+/* Interrupcion del Timer 2*/
+ISR(TIMER2_COMPA_vect){
+    // se inicia la conversion del ADC
+    ADCSRA |= (1 << ADSC);
+    // se ejecuta la funcion adicional
+    
+    return;
+}
+
+ISR(ADC_vect){
+    // Se calcula el valor de la señal de control
+    switch (ADMUX & 0x0F){
+    case 0:
+        buck_voltage = ADC;
+        ADMUX &= 0xF0;
+        ADMUX |= 0x01;
+        break;
+    case 1:
+        vNimh = ADC;
+        ADMUX &= 0xF0;
+        ADMUX |= 0x02;
+
+        break;
+    case 2:
+        vLion = ADC;
+        ADMUX &= 0xF0;
+        ADMUX |= 0x03;
+
+        break;
+    case 3:
+        buck_current = ADC;
+        ADMUX &= 0xF0;
+        ADMUX |= 0x07;
+        
+        break;
+    case  7:
+        vAlimentacion = ADC;
+        ADMUX &= 0xF0;
+        break;
+    default:
+        ADMUX &= 0xF0;
+        break;
+    }
+
+    return;
+}
+
