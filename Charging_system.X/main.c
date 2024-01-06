@@ -17,6 +17,7 @@
 #include <avr/io.h>
 
 #include "controller_io_utils.h"
+#include "LiON_definitions.h"
 
 // --------------- DEFINICIONES --------------------------
 #define UART_BUFFER 64
@@ -114,34 +115,63 @@ int main(void) {
     
 
     while(1){
-        if(vAlimentacion > V_IN_MIN){
-
-            if(vLion < V_LECT_MIN_LION && charge_lion == 2) charge_lion = 0;
-            charge_lion_prev = charge_lion;
-            if(vLion < V_LECT_MAX_LION && charge_lion== 0){
-                PORTD &= ~(1 << PD5);
-                PORTD |= (1 << PD7);
-                PORTB |= (1 << PB7);
-                charge_lion = 1;
-                if(charge_lion_prev == 0){
-                    e_anterior = 0;
-                    e_integral = 0;
-                    ref = 0;
-                    ref_top = I_LION_MAX;
-                }
-            }else if(buck_current < I_LION_MIN){
-                // fin de carga
-                PORTD |= (1 << PD5);
-                PORTD &= ~(1 << PD7);
-                PORTB &= ~(1 << PB7);
-                charge_lion = 2;
-            }
-
-            // si no se esta cargando LiON, se carga NiMH
-        }
+        
     }
     return 0;
 }
+
+#define STATION_TRESHOLD 323
+uint8_t isConnected(void){
+    
+    if (vAlimentacion > STATION_TRESHOLD){
+        return 1;
+    }
+    return 0;
+}
+// --------------- FSMs ----------------------------------
+uint8_t chargeLionState = 0;
+void FSMChargeLiON(){
+    switch(chargeLionState){
+        case 0:
+            // Esperar a que el voltaje de la bateria sea menora 3V
+            if (vLion < V_LION_EMPTY && isConnected()){
+                chargeLionState = 1; //inicia la carga
+            }
+            break;
+        case 1:
+            // iniciar estados del PID
+            
+            
+            buckOn(); //se enciende el controlador buck
+            chargeLionOn(); // se enciende el controlador de carga
+            supplyLionOff(); // se apaga la fuente de voltaje
+            chargeLionState = 2;
+        case 2:
+            // Cargar la bateria hasta que el voltaje sea mayor a 4.2V
+            calculatePIDCurrent();
+            if (readADC(LION_V_CHANNEL) > V_LION_FULL){
+                chargeLionState = 2; // carga completa
+            }
+            break;
+        case 3:
+            // se cambia a modo de voltaje constante
+            startPID(V_LION_FULL,PID_VOLTAGE);
+            chargeLionState = 4;
+        case 4:
+            // se completa la carga hasta que la corriente sea menor a 0.15A
+            
+            if (readADC(BUCK_I_CHANNEL) < I_LION_STOP_CHARGE){
+                chargeLionOff(); // se apaga el controlador de carga
+                buckOff(); // se apaga el controlador buck
+                chargeLionState = 0; // carga completa
+            }
+            break;
+
+    }
+    return;
+}
+
+
 
 // --------------- FUNCIONES -----------------------------
 void send_data(const char* data, uint8_t num){
@@ -265,6 +295,7 @@ void calculate_pid(){
     OCR1A =(uint16_t) u;    
     return;
 }
+
 void calculate_pid_voltage(){
     e = ref  - buck_voltage;
 
@@ -298,7 +329,7 @@ ISR(TIMER2_COMPA_vect){
     ADCSRA |= (1 << ADSC);
     contador = (contador+1)%50;
     if(contador == 0 && ref <ref_top){
-        ref += 1;
+        ref += 1;   
     }
     return;
 }
