@@ -72,15 +72,18 @@ float ref_top = 614;
 uint8_t charge_lion = 2;
 uint8_t charge_nimh = 2;
 uint8_t charge_lion_prev = 0;
-uint8_t contador = 0;
-/*Controlador de carga  */
-/* Bit 0: READ_CHAN0
-   
-*/
-uint8_t controller_flags = 0; 
-                                
+uint8_t contador = 0;                               
+/*control del tiempo*/
+volatile uint32_t miliSeconds = 0;
+uint32_t blinkPeriod = 500;
+uint32_t blinkPeriodNiMH = 500;
 
+// 1 = encendido, 0 = apagado
+uint8_t blinkLionON = 0;
 // -------------- PROTOTIPOS DE FUNCIONES ----------------
+void FSMBlink();
+void FSMChargeLiON();
+
 void send_data(const char* data, uint8_t num);
 /**Configuración de periféricos*/
 void conf_timer0();
@@ -92,8 +95,13 @@ void conf_adc();
 void conf_uart();
 /*Configuración para los puertos*/
 void conf_ports();
+uint8_t isConnected(void);
+/*pid*/
+void calculate_pid(void);
+void calculate_pid_voltage(void);
 
 void pid(void);
+
 
 int main(void) {
 
@@ -113,9 +121,28 @@ int main(void) {
     
     // activar switch de carga LiON
     
+    /*variables para blink*/
+    uint32_t lastBlinkTime = 0;
+    uint32_t lastBlinkTimeNiMH = 0;
+    uint32_t lastChargeFSMTime = 0;
 
     while(1){
+        //if(isConnected() ) nimhLedOn();
+        //nimhLedOn();
+        /*ejecutar las fsm de carga*/
+        if(miliSeconds - lastChargeFSMTime > 1){
+            
+            lastChargeFSMTime = miliSeconds;
+            FSMChargeLiON();
         
+        }
+
+
+        if(miliSeconds - lastBlinkTime > blinkPeriod && blinkLionON){
+            
+            lastBlinkTime = miliSeconds;
+            FSMBlink();
+        }
     }
     return 0;
 }
@@ -129,10 +156,13 @@ uint8_t isConnected(void){
     return 0;
 }
 // --------------- FSMs ----------------------------------
+/*Debe de ejecutarse cada 1 ms*/
+
 uint8_t chargeLionState = 0;
 void FSMChargeLiON(){
     switch(chargeLionState){
         case 0:
+            blinkLionON = 0;
             // Esperar a que el voltaje de la bateria sea menora 3V
             if (vLion < V_LION_EMPTY && isConnected()){
                 chargeLionState = 1; //inicia la carga
@@ -140,28 +170,42 @@ void FSMChargeLiON(){
             break;
         case 1:
             // iniciar estados del PID
-            
-            
+            blinkLionON = 1;
+            e = 0;
+            e_anterior = 0;
+            e_integral = 0;
+            ref = 0;
+            ref_top = I_LION_CHARGE;
+
             buckOn(); //se enciende el controlador buck
             chargeLionOn(); // se enciende el controlador de carga
             supplyLionOff(); // se apaga la fuente de voltaje
+            // se parpadea cada 250ms
+            blinkPeriod = 250;
             chargeLionState = 2;
         case 2:
             // Cargar la bateria hasta que el voltaje sea mayor a 4.2V
-            calculatePIDCurrent();
-            if (readADC(LION_V_CHANNEL) > V_LION_FULL){
-                chargeLionState = 2; // carga completa
+            calculate_pid();
+            if (vLion > V_LION_FULL){
+                chargeLionState = 3; // carga completa
             }
             break;
         case 3:
             // se cambia a modo de voltaje constante
-            startPID(V_LION_FULL,PID_VOLTAGE);
+            e = 0;
+            e_anterior = 0;
+            e_integral = 0;
+            ref = V_LION_FULL;
+            ref_top = V_LION_FULL;
+            // se parpadea cada 500ms
+            blinkPeriod = 500;
             chargeLionState = 4;
         case 4:
             // se completa la carga hasta que la corriente sea menor a 0.15A
-            
-            if (readADC(BUCK_I_CHANNEL) < I_LION_STOP_CHARGE){
-                chargeLionOff(); // se apaga el controlador de carga
+            calculate_pid_voltage();
+            if (buck_current < I_LION_STOP_CHARGE){
+                blinkLionON = 0;
+                chargeLionOn(); // se apaga el controlador de carga
                 buckOff(); // se apaga el controlador buck
                 chargeLionState = 0; // carga completa
             }
@@ -171,7 +215,20 @@ void FSMChargeLiON(){
     return;
 }
 
-
+uint8_t blinkState = 0;
+void FSMBlink(){
+    switch(blinkState){
+        case 0:
+            blinkState = 1;
+            lionLedOn();
+            break;
+        case 1:
+            blinkState = 0;
+            lionLedOff();
+            break;
+    }
+    return;
+}
 
 // --------------- FUNCIONES -----------------------------
 void send_data(const char* data, uint8_t num){
@@ -226,13 +283,13 @@ void conf_timer2(){
     TCCR2A |= (1 << WGM21);
     TCCR2A &= ~(1 << WGM20);
     TCCR2B &= ~(1 << WGM22);
-    // Prescalador de 64 CS2[2:0] = 0b011
+    // Prescalador de 32 CS2[2:0] = 0b011
     TCCR2B |= (1 << CS21) | (1 << CS20);
     TCCR2B &= ~(1 << CS22);
     // Se habilita la interrupcion por comparacion con OCR2A
     TIMSK2 |= (1 << OCIE2A);
     // Frecuencia de interrupcion = 1kHz
-    OCR2A = 124;  // Fs = Fosc / (N * (1 + OCR2A)) ,N = 1024 (prescalador)
+    OCR2A = 49;  // Fs = Fosc / (N * (1 + OCR2A)) ,N = 32 (prescalador)
     return;
 }
 
@@ -325,11 +382,18 @@ ISR(USART_UDRE_vect){
 }
 
 ISR(TIMER2_COMPA_vect){
-    // Se muestrea el ADC cada 1ms
+    static uint8_t contadorMilis = 0;
+    // Se muestrea el ADC cada 0.2ms
     ADCSRA |= (1 << ADSC);
     contador = (contador+1)%50;
     if(contador == 0 && ref <ref_top){
         ref += 1;   
+    }
+    // Se actualiza el tiempo
+    contadorMilis++;
+    if(contadorMilis==5){
+        miliSeconds++;
+        contadorMilis = 0;
     }
     return;
 }
