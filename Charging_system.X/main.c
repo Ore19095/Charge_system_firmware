@@ -164,7 +164,7 @@ void FSMChargeLiON(){
         case 0:
             blinkLionON = 0;
             // Esperar a que el voltaje de la bateria sea menora 3V
-            if (vLion < V_LION_EMPTY && isConnected()){
+            if (  204< vLion && vLion < V_LION_EMPTY && isConnected()){
                 chargeLionState = 1; //inicia la carga
             }
             break;
@@ -198,11 +198,11 @@ void FSMChargeLiON(){
             ref = V_LION_FULL;
             ref_top = V_LION_FULL;
             // se parpadea cada 500ms
-            blinkPeriod = 500;
+            blinkPeriod = 1000;
             chargeLionState = 4;
         case 4:
             // se completa la carga hasta que la corriente sea menor a 0.15A
-            calculate_pid_voltage();
+            //calculate_pid_voltage();
             if (buck_current < I_LION_STOP_CHARGE){
                 blinkLionON = 0;
                 chargeLionOn(); // se apaga el controlador de carga
