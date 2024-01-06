@@ -157,6 +157,8 @@ uint8_t isConnected(void){
 }
 // --------------- FSMs ----------------------------------
 /*Debe de ejecutarse cada 1 ms*/
+// variable para establecer si una bateria esta vacia o no, 1 = vacia, 0 = no vacia
+uint8_t emptyNiMH = 0;
 
 uint8_t chargeLionState = 0;
 void FSMChargeLiON(){
@@ -215,6 +217,32 @@ void FSMChargeLiON(){
     return;
 }
 
+#define TIKLE_TIME (1000*60*15) // 15 minutos
+#define TIKLE_COOLDOWN (1000*60) // 1 minutos
+uint8_t chargeNiMHState = 0;
+void FSMChargeNiMH(){
+    static uint32_t lastChargeTime = 0;
+
+    switch (chargeNiMHState){
+    case 0:
+        if ( emptyNiMH && isConnected()) chargeNiMHState = 1;
+        break;
+    case 1:
+        // se enciende el buck
+        buckOn();
+        // se enciende el controlador de carga
+        chargeNiMHOn();
+        // se apaga la fuente de voltaje
+        supplyNiMHOff();
+        // se parpadea cada 250ms
+        blinkPeriodNiMH = 250;
+        chargeNiMHState = 2;
+        break;
+    
+    default:
+        break;
+    }
+}
 uint8_t blinkState = 0;
 void FSMBlink(){
     switch(blinkState){
