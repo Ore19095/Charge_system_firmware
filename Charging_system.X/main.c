@@ -22,6 +22,8 @@
 
 // --------------- DEFINICIONES --------------------------
 #define UART_BUFFER 64
+
+#define TEN_MIUNTES (1000*60*10)
 //----------------- limites ----------------
 
 #define V_IN_MIN 359 // detecta cuando hay 10V en la alimentacion 10*1024/5 = 359.3
@@ -81,6 +83,7 @@ uint32_t blinkPeriodNiMH = 500;
 
 // 1 = encendido, 0 = apagado
 uint8_t blinkLionON = 0;
+uint8_t blinkNiMHON = 0;
 // -------------- PROTOTIPOS DE FUNCIONES ----------------
 void FSMBlink();
 void FSMChargeLiON();
@@ -103,6 +106,8 @@ void calculate_pid_voltage(void);
 
 void pid(void);
 
+// variable para establecer si una bateria esta vacia o no, 1 = vacia, 0 = no vacia
+uint8_t emptyNiMH = 0;
 
 int main(void) {
 
@@ -126,16 +131,32 @@ int main(void) {
     uint32_t lastBlinkTime = 0;
     uint32_t lastBlinkTimeNiMH = 0;
     uint32_t lastChargeFSMTime = 0;
-
+    uint32_t lastSelectionTime = 0;
+    uint32_t lastNiMHCooldownTime = 0;
     while(1){
         //if(isConnected() ) nimhLedOn();
         //nimhLedOn();
         /*ejecutar las fsm de carga*/
-        if(miliSeconds - lastChargeFSMTime > 1){
+        if(miliSeconds - lastChargeFSMTime > 1 && isConnected()){
             
             lastChargeFSMTime = miliSeconds;
             FSMChargeLiON();
+            FSMChargeNiMH();
         
+        }
+
+        if(!isConnected() && miliSeconds - lastSelectionTime > TEN_MIUNTES){
+            // si no está en la estación de carga
+            // se conecta la bateria de litio
+            supplyNimhOff();
+            supplyLionOn();
+            lastChargeFSMTime = miliSeconds;
+            // si ha pasado un minuto desde que se cambio la bateria a lion
+        }
+        if(miliSeconds - lastNiMHCooldownTime > (1000*60)){
+                // se verifica que la bateria de nimh esté descargada
+                lastChargeFSMTime = miliSeconds;
+                if(vNimh < V_NIMH_EMPTY) emptyNiMH = 1;
         }
 
 
@@ -143,6 +164,11 @@ int main(void) {
             
             lastBlinkTime = miliSeconds;
             FSMBlink();
+        }
+        if(miliSeconds - lastBlinkTimeNiMH > blinkPeriod && blinkLionON){
+            
+            lastBlinkTimeNiMH = miliSeconds;
+            FSMBlinkNiMH();
         }
     }
     return 0;
@@ -158,8 +184,7 @@ uint8_t isConnected(void){
 }
 // --------------- FSMs ----------------------------------
 /*Debe de ejecutarse cada 1 ms*/
-// variable para establecer si una bateria esta vacia o no, 1 = vacia, 0 = no vacia
-uint8_t emptyNiMH = 0;
+
 
 uint8_t chargeLionState = 0;
 void FSMChargeLiON(){
@@ -219,19 +244,20 @@ void FSMChargeLiON(){
 }
 
 
-#define TIKLE_TIME (1000*60*15) // 15 minutos
-#define TIKLE_COOLDOWN (1000*60) // 1 minutos
+#define FOUR_HOURS (1000*3600*4)
 uint8_t chargeNiMHState = 0;
 void FSMChargeNiMH(){
     static uint32_t lastChargeTime = 0;
 
     switch (chargeNiMHState){
     case 0:
-        if ( emptyNiMH && isConnected()) chargeNiMHState = 1;
+        if ( emptyNiMH && isConnected() && chargeLionState == 0) chargeNiMHState = 1;
         break;
     case 1:
+        // captura del tiempo en el que inicio el tiempo
+        lastChargeTime = miliSeconds;
         // iniciar estados del PID
-        blinkLionON = 1;
+        blinkNiMHON = 1;
         e = 0;
         e_anterior = 0;
         e_integral = 0;
@@ -240,14 +266,25 @@ void FSMChargeNiMH(){
         // se enciende el buck
         buckOn();
         // se enciende el controlador de carga
-        chargeNiMHOn();
+        chargeNimhOn();
         // se quita la bateria como fuente principal 
-        supplyNiMHOff();
+        supplyNimhOff();
         // se parpadea cada 250ms
         blinkPeriodNiMH = 250;
         chargeNiMHState = 2;
         break;
     
+    case 2:
+        // Cargar la bateria hasta que el voltaje sea mayor a 4.2V
+        calculate_pid();
+        if(miliSeconds - lastChargeTime > FOUR_HOURS){
+            buckOff();
+            chargeNimhOff();
+            blinkNiMHON = 0;
+        }
+        
+
+        break;
     default:
         break;
     }
@@ -262,6 +299,21 @@ void FSMBlink(){
         case 1:
             blinkState = 0;
             lionLedOff();
+            break;
+    }
+    return;
+}
+
+uint8_t blinkStateNiMH = 0;
+void FSMBlinkNiMH(){
+    switch(blinkStateNiMH){
+        case 0:
+            blinkState = 1;
+            nimhLedOn();
+            break;
+        case 1:
+            blinkState = 0;
+            nimhLedOff();
             break;
     }
     return;
