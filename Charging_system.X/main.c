@@ -18,6 +18,7 @@
 
 #include "controller_io_utils.h"
 #include "LiON_definitions.h"
+#include "NiMH_definitions.h"
 
 // --------------- DEFINICIONES --------------------------
 #define UART_BUFFER 64
@@ -217,6 +218,7 @@ void FSMChargeLiON(){
     return;
 }
 
+
 #define TIKLE_TIME (1000*60*15) // 15 minutos
 #define TIKLE_COOLDOWN (1000*60) // 1 minutos
 uint8_t chargeNiMHState = 0;
@@ -228,11 +230,18 @@ void FSMChargeNiMH(){
         if ( emptyNiMH && isConnected()) chargeNiMHState = 1;
         break;
     case 1:
+        // iniciar estados del PID
+        blinkLionON = 1;
+        e = 0;
+        e_anterior = 0;
+        e_integral = 0;
+        ref = 0;
+        ref_top = I_NIMH_CHARGE;
         // se enciende el buck
         buckOn();
         // se enciende el controlador de carga
         chargeNiMHOn();
-        // se apaga la fuente de voltaje
+        // se quita la bateria como fuente principal 
         supplyNiMHOff();
         // se parpadea cada 250ms
         blinkPeriodNiMH = 250;
