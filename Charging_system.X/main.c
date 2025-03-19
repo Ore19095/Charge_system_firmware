@@ -145,13 +145,8 @@ int main(void) {
         
         }
 
-        if(!isConnected() && miliSeconds - lastSelectionTime > TEN_MIUNTES){
-            // si no está en la estación de carga
-            // se conecta la bateria de litio
-            supplyNimhOff();
-            supplyLionOn();
-            lastChargeFSMTime = miliSeconds;
-            // si ha pasado un minuto desde que se cambio la bateria a lion
+        if(!isConnected()){
+           
         }
         if(miliSeconds - lastNiMHCooldownTime > (1000*60)){
                 // se verifica que la bateria de nimh esté descargada
@@ -183,6 +178,45 @@ uint8_t isConnected(void){
     return 0;
 }
 // --------------- FSMs ----------------------------------
+uint8_t batteryUseState = 2;
+void fSMBatteryUse(){
+    static uint32_t useLastTime = 0;
+    switch (batteryUseState){
+        case 0:
+            // si se lleva mas de un minuto usando lion
+            if(miliSeconds-useLastTime > (1000*60)){
+                batteryUseState = 1;
+                useLastTime = miliSeconds;
+            }
+            break;
+        case 1:
+            // si la bateria no está vacia
+            if(vNimh > V_LION_EMPTY) {
+                supplyLionOff();
+                supplyNimhOn();
+                batteryUseState = 2;
+                emptyNiMH = 0;
+            }else{
+                batteryUseState = 0;
+                supplyLionOn();
+                supplyNimhOff();
+                emptyNiMH = 1;
+            }
+            break;
+        
+        case 2:
+            supplyLionOff();
+            supplyNimhOn();
+            if(miliSeconds-useLastTime > (1000*60*10)){
+                batteryUseState = 0;
+                useLastTime = miliSeconds;
+                supplyLionOn();
+                supplyNimhOff();
+            }
+    }
+}
+
+
 /*Debe de ejecutarse cada 1 ms*/
 
 
